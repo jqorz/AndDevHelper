@@ -2,13 +2,16 @@ package com.jqorz.anddevhelper.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.jqorz.anddevhelper.model.CommandResult
 
@@ -57,22 +60,29 @@ fun CommandResultDialog(
                         result.output.isBlank() -> "(无输出)"
                         else -> result.output
                     }
-                    Text(
-                        text = displayText,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .verticalScroll(rememberScrollState()),
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = displayText,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .verticalScroll(rememberScrollState()),
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(16.dp))
 
                 // 底部信息
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = "退出码: ${result.exitCode}",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.width(16.dp))
