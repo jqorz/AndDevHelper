@@ -8,10 +8,10 @@ data class AppSettings(
     val commandTimeout: Int = 30,
     val autoRefreshDevices: Boolean = true,
     val refreshInterval: Int = 5,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeMode: ThemeMode = ThemeMode.DARK,
     val historyLimit: Int = 100,
 )
 
 enum class ThemeMode {
-    LIGHT, DARK, SYSTEM
+    LIGHT, DARK
 }

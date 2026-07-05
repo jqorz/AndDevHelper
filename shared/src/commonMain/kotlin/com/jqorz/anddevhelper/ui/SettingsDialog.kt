@@ -24,7 +24,7 @@ fun SettingsDialog(
         Surface(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 6.dp,
-            modifier = Modifier.fillMaxWidth(0.65f),
+            modifier = Modifier.fillMaxWidth(0.8f),
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text("设置", style = MaterialTheme.typography.titleLarge)
@@ -101,21 +101,16 @@ fun SettingsDialog(
                 Text("主题模式", style = MaterialTheme.typography.labelLarge)
                 Spacer(Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ThemeMode.entries.forEach { mode ->
-                        FilterChip(
-                            selected = edited.themeMode == mode,
-                            onClick = { edited = edited.copy(themeMode = mode) },
-                            label = {
-                                Text(
-                                    when (mode) {
-                                        ThemeMode.LIGHT -> "亮色"
-                                        ThemeMode.DARK -> "暗色"
-                                        ThemeMode.SYSTEM -> "跟随系统"
-                                    }
-                                )
-                            },
-                        )
-                    }
+                    FilterChip(
+                        selected = edited.themeMode == ThemeMode.LIGHT,
+                        onClick = { edited = edited.copy(themeMode = ThemeMode.LIGHT) },
+                        label = { Text("亮色") },
+                    )
+                    FilterChip(
+                        selected = edited.themeMode == ThemeMode.DARK,
+                        onClick = { edited = edited.copy(themeMode = ThemeMode.DARK) },
+                        label = { Text("暗色") },
+                    )
                 }
 
                 Spacer(Modifier.height(16.dp))

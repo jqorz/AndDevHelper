@@ -20,7 +20,6 @@ fun App(viewModel: MainViewModel = remember { MainViewModel().also { it.init() }
     val isDark = when (viewModel.settings.themeMode) {
         ThemeMode.DARK -> true
         ThemeMode.LIGHT -> false
-        ThemeMode.SYSTEM -> false // Compose Desktop 默认跟随系统
     }
 
     AndDevHelperTheme(isDark = isDark) {
