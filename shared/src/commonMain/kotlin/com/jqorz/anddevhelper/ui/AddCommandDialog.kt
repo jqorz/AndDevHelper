@@ -17,7 +17,7 @@ fun AddCommandDialog(
     onUpdate: (command: AdbCommand, name: String, template: String) -> Unit,
 ) {
     var name by remember(editingCommand) { mutableStateOf(editingCommand?.name ?: "") }
-    var template by remember(editingCommand) { mutableStateOf(editingCommand?.template ?: "") }
+    var template by remember(editingCommand) { mutableStateOf(editingCommand?.template ?: "adb -s {device} shell") }
     var selectedTab by remember(editingCommand) {
         mutableStateOf(CommandTab.fromId(editingCommand?.tabId ?: CommandTab.DEVICE_INFO.id))
     }

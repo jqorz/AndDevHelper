@@ -227,6 +227,7 @@ class MainViewModel {
             saveCustomCommands()
         }
         editingCommand = null
+        showAddCommandDialog = false
     }
 
     fun deleteCommand(command: AdbCommand) {
