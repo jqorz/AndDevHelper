@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.kotlinx.coroutinesSwing)
 
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.compose.components.resources)
 }
 
 kotlin {
@@ -33,8 +34,23 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.jqorz.anddevhelper"
+            packageName = "AndDevHelper"
             packageVersion = "1.0.0"
+
+            windows {
+                iconFile.set(project.file("src/main/resources/icons/app.ico"))
+                menuGroup = "AndDevHelper"
+                shortcut = true
+                dirChooser = true
+            }
+
+            macOS {
+                iconFile.set(project.file("src/main/resources/icons/icon_256x256.png"))
+            }
+
+            linux {
+                iconFile.set(project.file("src/main/resources/icons/icon_256x256.png"))
+            }
         }
     }
 }
