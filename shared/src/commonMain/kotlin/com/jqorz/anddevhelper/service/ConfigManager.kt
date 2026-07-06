@@ -2,6 +2,7 @@ package com.jqorz.anddevhelper.service
 
 import com.jqorz.anddevhelper.model.AdbCommand
 import com.jqorz.anddevhelper.model.AppSettings
+import com.jqorz.anddevhelper.model.CommandTab
 import com.jqorz.anddevhelper.model.ThemeMode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -12,6 +13,7 @@ private data class ConfigData(
     val settings: AppSettings = AppSettings(),
     val customCommands: List<AdbCommand> = emptyList(),
     val modifiedPresetIds: Map<String, String> = emptyMap(), // id -> modified template
+    val customTabs: List<CommandTab> = emptyList(),
 )
 
 class ConfigManager {
@@ -69,5 +71,12 @@ class ConfigManager {
     fun saveModifiedPresets(modified: Map<String, String>) {
         val data = load()
         save(data.copy(modifiedPresetIds = modified))
+    }
+
+    fun loadCustomTabs(): List<CommandTab> = load().customTabs
+
+    fun saveCustomTabs(tabs: List<CommandTab>) {
+        val data = load()
+        save(data.copy(customTabs = tabs))
     }
 }

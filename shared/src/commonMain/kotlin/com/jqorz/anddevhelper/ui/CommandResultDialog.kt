@@ -26,11 +26,11 @@ fun CommandResultDialog(
         Surface(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 6.dp,
-            modifier = Modifier.fillMaxWidth(0.8f).fillMaxHeight(0.7f),
+            modifier = Modifier.fillMaxWidth(0.85f).fillMaxHeight(0.8f),
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 // 标题栏
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = if (result.isSuccess) "执行成功" else "执行失败",
                         style = MaterialTheme.typography.titleLarge,
@@ -49,7 +49,7 @@ fun CommandResultDialog(
 
                 Spacer(Modifier.height(12.dp))
 
-                // 结果内容
+                // 结果内容 - 可滚动
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = MaterialTheme.shapes.medium,
@@ -60,6 +60,7 @@ fun CommandResultDialog(
                         result.output.isBlank() -> "(无输出)"
                         else -> result.output
                     }
+                    val scrollState = rememberScrollState()
                     SelectionContainer {
                         Text(
                             text = displayText,
@@ -67,7 +68,8 @@ fun CommandResultDialog(
                             lineHeight = 20.sp,
                             modifier = Modifier
                                 .padding(12.dp)
-                                .verticalScroll(rememberScrollState()),
+                                .fillMaxWidth()
+                                .verticalScroll(scrollState),
                         )
                     }
                 }

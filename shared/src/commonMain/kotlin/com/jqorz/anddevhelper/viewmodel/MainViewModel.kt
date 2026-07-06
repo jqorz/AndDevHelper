@@ -23,7 +23,9 @@ class MainViewModel {
         private set
 
     // Tab 相关
-    var selectedTab by mutableStateOf(CommandTab.DEVICE_INFO)
+    var allTabs = mutableStateListOf<CommandTab>()
+        private set
+    var selectedTab by mutableStateOf(CommandTab.DEFAULTS[0])
         private set
 
     // 命令相关
@@ -40,6 +42,10 @@ class MainViewModel {
     var adbValid by mutableStateOf(false)
         private set
 
+    // 设备详情
+    var deviceInfo by mutableStateOf(DeviceInfo())
+        private set
+
     // UI 状态
     var showSettingsDialog by mutableStateOf(false)
         private set
@@ -47,9 +53,13 @@ class MainViewModel {
         private set
     var editingCommand by mutableStateOf<AdbCommand?>(null)
         private set
+    var addCommandDefaultTab by mutableStateOf<CommandTab?>(null)
+        private set
     var showCommandResultDialog by mutableStateOf<CommandResult?>(null)
         private set
     var showVariableInputDialog by mutableStateOf<AdbCommand?>(null)
+        private set
+    var showDeviceInfoDialog by mutableStateOf(false)
         private set
 
     // APK 安装状态
@@ -64,6 +74,13 @@ class MainViewModel {
         settings = configManager.loadSettings()
         val customCommands = configManager.loadCustomCommands()
         val modifiedPresets = configManager.loadModifiedPresets()
+
+        // 加载 Tab（默认 + 自定义）
+        val customTabs = configManager.loadCustomTabs()
+        allTabs.clear()
+        allTabs.addAll(CommandTab.DEFAULTS)
+        allTabs.addAll(customTabs)
+        selectedTab = allTabs.first()
 
         // 加载预置命令，应用已修改的模板
         val presets = PresetCommands.getAll().map { cmd ->
@@ -252,6 +269,42 @@ class MainViewModel {
         configManager.saveCustomCommands(custom)
     }
 
+    // --- Tab 管理 ---
+
+    fun addTab(name: String) {
+        val id = "tab_${UUID.randomUUID().toString().take(8)}"
+        val tab = CommandTab(id = id, displayName = name, isPreset = false)
+        allTabs.add(tab)
+        saveCustomTabs()
+    }
+
+    fun deleteTab(tab: CommandTab) {
+        if (tab.isPreset) return
+        allTabs.removeAll { it.id == tab.id }
+        // 删除该 tab 下的自定义命令
+        allCommands.removeAll { !it.isPreset && it.tabId == tab.id }
+        saveCustomCommands()
+        saveCustomTabs()
+        // 如果删除的是当前选中的 tab，切换到第一个
+        if (selectedTab.id == tab.id) {
+            selectedTab = allTabs.first()
+        }
+    }
+
+    fun renameTab(tab: CommandTab, newName: String) {
+        if (tab.isPreset) return
+        val index = allTabs.indexOfFirst { it.id == tab.id }
+        if (index >= 0) {
+            allTabs[index] = tab.copy(displayName = newName)
+            saveCustomTabs()
+        }
+    }
+
+    private fun saveCustomTabs() {
+        val custom = allTabs.filter { !it.isPreset }
+        configManager.saveCustomTabs(custom)
+    }
+
     // --- 设置 ---
 
     fun updateSettings(newSettings: AppSettings) {
@@ -269,8 +322,9 @@ class MainViewModel {
         showSettingsDialog = false
     }
 
-    fun showAddCommand() {
+    fun showAddCommand(defaultTab: CommandTab? = null) {
         editingCommand = null
+        addCommandDefaultTab = defaultTab
         showAddCommandDialog = true
     }
 
@@ -282,6 +336,7 @@ class MainViewModel {
     fun dismissAddCommand() {
         showAddCommandDialog = false
         editingCommand = null
+        addCommandDefaultTab = null
     }
 
     fun dismissCommandResult() {
@@ -290,6 +345,27 @@ class MainViewModel {
 
     fun dismissVariableInput() {
         showVariableInputDialog = null
+    }
+
+    // --- 设备详情 ---
+
+    fun showDeviceInfo() {
+        val device = selectedDevice
+        if (device == null) {
+            deviceInfo = DeviceInfo(errorMessage = "未选择设备")
+            showDeviceInfoDialog = true
+            return
+        }
+        showDeviceInfoDialog = true
+        deviceInfo = DeviceInfo(isLoading = true)
+        scope.launch {
+            val info = adbService.getDeviceInfo(settings.adbPath, device.serial)
+            deviceInfo = info
+        }
+    }
+
+    fun dismissDeviceInfo() {
+        showDeviceInfoDialog = false
     }
 
     // --- APK 安装 ---

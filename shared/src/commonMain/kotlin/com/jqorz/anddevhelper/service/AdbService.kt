@@ -2,6 +2,7 @@ package com.jqorz.anddevhelper.service
 
 import com.jqorz.anddevhelper.model.AdbDevice
 import com.jqorz.anddevhelper.model.CommandResult
+import com.jqorz.anddevhelper.model.DeviceInfo
 import com.jqorz.anddevhelper.model.DeviceStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -68,6 +69,98 @@ class AdbService {
                     AdbDevice(serial = serial, status = status)
                 } else null
             }
+    }
+
+    /**
+     * 获取设备详细信息
+     */
+    suspend fun getDeviceInfo(adbPath: String, device: String): DeviceInfo {
+        if (adbPath.isBlank()) return DeviceInfo(errorMessage = "ADB 路径未配置")
+        return withContext(Dispatchers.IO) {
+            try {
+                // 并行获取各项信息
+                val props = getProp(adbPath, device)
+                val screen = getScreenSize(adbPath, device)
+                val density = getScreenDensity(adbPath, device)
+                val memTotal = getMemTotal(adbPath, device)
+                val serialno = getSerialNo(adbPath, device)
+                val cpuAbi = props["ro.product.cpu.abi"] ?: ""
+                val cpuHardware = props["ro.hardware"] ?: ""
+
+                DeviceInfo(
+                    model = props["ro.product.model"] ?: "",
+                    manufacturer = props["ro.product.manufacturer"] ?: "",
+                    androidVersion = props["ro.build.version.release"] ?: "",
+                    sdkVersion = props["ro.build.version.sdk"] ?: "",
+                    screenSize = screen,
+                    screenDensity = density,
+                    cpuAbi = cpuAbi,
+                    cpuHardware = cpuHardware,
+                    totalMemory = memTotal,
+                    serialno = serialno,
+                    buildId = props["ro.build.display.id"] ?: "",
+                    securityPatch = props["ro.build.version.security_patch"] ?: "",
+                    fingerprint = props["ro.build.fingerprint"] ?: "",
+                    board = props["ro.product.board"] ?: "",
+                    brand = props["ro.product.brand"] ?: "",
+                    isLoaded = true,
+                )
+            } catch (e: Exception) {
+                DeviceInfo(errorMessage = e.message ?: "获取设备信息失败")
+            }
+        }
+    }
+
+    private fun getProp(adbPath: String, device: String): Map<String, String> {
+        val result = executeRaw(adbPath, listOf("-s", device, "shell", "getprop"))
+        if (!result.isSuccess) return emptyMap()
+        val map = mutableMapOf<String, String>()
+        for (line in result.output.lines()) {
+            val match = Regex("^\\[([^]]+)]\\s*:\\s*\\[([^]]*)]$").find(line.trim())
+            if (match != null) {
+                map[match.groupValues[1]] = match.groupValues[2]
+            }
+        }
+        return map
+    }
+
+    private fun getScreenSize(adbPath: String, device: String): String {
+        val result = executeRaw(adbPath, listOf("-s", device, "shell", "wm", "size"))
+        if (!result.isSuccess) return ""
+        // 输出格式: "Physical size: 1080x2340" 或 "Override size: 1080x2340"
+        val lines = result.output.lines()
+        val physical = lines.firstOrNull { it.contains("Physical size") }
+            ?.substringAfter(":")?.trim() ?: ""
+        val override = lines.firstOrNull { it.contains("Override size") }
+            ?.substringAfter(":")?.trim() ?: ""
+        return if (override.isNotEmpty()) "$physical (Override: $override)" else physical
+    }
+
+    private fun getScreenDensity(adbPath: String, device: String): String {
+        val result = executeRaw(adbPath, listOf("-s", device, "shell", "wm", "density"))
+        if (!result.isSuccess) return ""
+        val lines = result.output.lines()
+        val physical = lines.firstOrNull { it.contains("Physical density") }
+            ?.substringAfter(":")?.trim() ?: ""
+        val override = lines.firstOrNull { it.contains("Override density") }
+            ?.substringAfter(":")?.trim() ?: ""
+        return if (override.isNotEmpty()) "$physical (Override: $override)" else physical
+    }
+
+    private fun getMemTotal(adbPath: String, device: String): String {
+        val result = executeRaw(adbPath, listOf("-s", device, "shell", "cat", "/proc/meminfo"))
+        if (!result.isSuccess) return ""
+        val line = result.output.lines().firstOrNull { it.startsWith("MemTotal") } ?: ""
+        val kb = Regex("MemTotal:\\s+(\\d+)").find(line)?.groupValues?.get(1)?.toLongOrNull()
+        return if (kb != null) {
+            val gb = kb / 1024.0 / 1024.0
+            if (gb >= 1) String.format("%.1f GB", gb) else "${kb / 1024} MB"
+        } else ""
+    }
+
+    private fun getSerialNo(adbPath: String, device: String): String {
+        val result = executeRaw(adbPath, listOf("-s", device, "get-serialno"))
+        return if (result.isSuccess) result.output.trim() else ""
     }
 
     /**

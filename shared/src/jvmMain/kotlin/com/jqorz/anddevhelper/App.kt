@@ -33,12 +33,13 @@ fun App(viewModel: MainViewModel = remember { MainViewModel().also { it.init() }
                     adbValid = viewModel.adbValid,
                     onSelectDevice = { viewModel.selectDevice(it) },
                     onRefresh = { viewModel.refreshDevices() },
+                    onShowInfo = { viewModel.showDeviceInfo() },
                     onOpenSettings = { viewModel.showSettings() },
                 )
 
                 // 中部 Tab 面板
                 CommandTabPanel(
-                    tabs = CommandTab.entries.toTypedArray(),
+                    tabs = viewModel.allTabs,
                     selectedTab = viewModel.selectedTab,
                     commands = viewModel.commandsForCurrentTab(),
                     executingCommandId = viewModel.executingCommandId,
@@ -46,7 +47,10 @@ fun App(viewModel: MainViewModel = remember { MainViewModel().also { it.init() }
                     onExecuteCommand = { viewModel.executeCommand(it) },
                     onEditCommand = { viewModel.showEditCommand(it) },
                     onDeleteCommand = { viewModel.deleteCommand(it) },
-                    onAddCommand = { viewModel.showAddCommand() },
+                    onAddCommand = { viewModel.showAddCommand(it) },
+                    onAddTab = { viewModel.addTab(it) },
+                    onRenameTab = { tab, name -> viewModel.renameTab(tab, name) },
+                    onDeleteTab = { viewModel.deleteTab(it) },
                     modifier = Modifier.weight(1f),
                 )
 
@@ -84,6 +88,8 @@ fun App(viewModel: MainViewModel = remember { MainViewModel().also { it.init() }
         if (viewModel.showAddCommandDialog) {
             AddCommandDialog(
                 editingCommand = viewModel.editingCommand,
+                tabs = viewModel.allTabs,
+                defaultTab = viewModel.addCommandDefaultTab,
                 onDismiss = { viewModel.dismissAddCommand() },
                 onConfirm = { name, template, tabId ->
                     viewModel.addCustomCommand(name, template, tabId)
@@ -109,6 +115,13 @@ fun App(viewModel: MainViewModel = remember { MainViewModel().also { it.init() }
                     viewModel.dismissVariableInput()
                     viewModel.executeCommandWithVariables(command, variables)
                 },
+            )
+        }
+
+        if (viewModel.showDeviceInfoDialog) {
+            DeviceInfoDialog(
+                deviceInfo = viewModel.deviceInfo,
+                onDismiss = { viewModel.dismissDeviceInfo() },
             )
         }
     }

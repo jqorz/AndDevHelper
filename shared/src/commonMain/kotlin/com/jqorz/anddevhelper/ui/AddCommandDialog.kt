@@ -12,14 +12,19 @@ import com.jqorz.anddevhelper.model.CommandTab
 @Composable
 fun AddCommandDialog(
     editingCommand: AdbCommand?,
+    tabs: List<CommandTab>,
+    defaultTab: CommandTab? = null,
     onDismiss: () -> Unit,
     onConfirm: (name: String, template: String, tabId: String) -> Unit,
     onUpdate: (command: AdbCommand, name: String, template: String) -> Unit,
 ) {
     var name by remember(editingCommand) { mutableStateOf(editingCommand?.name ?: "") }
     var template by remember(editingCommand) { mutableStateOf(editingCommand?.template ?: "adb -s {device} shell") }
-    var selectedTab by remember(editingCommand) {
-        mutableStateOf(CommandTab.fromId(editingCommand?.tabId ?: CommandTab.DEVICE_INFO.id))
+    var selectedTab by remember(editingCommand, defaultTab) {
+        mutableStateOf(
+            if (editingCommand != null) CommandTab.fromId(editingCommand.tabId)
+            else defaultTab ?: CommandTab.DEFAULTS[0]
+        )
     }
     var nameError by remember { mutableStateOf(false) }
     var templateError by remember { mutableStateOf(false) }
@@ -81,7 +86,7 @@ fun AddCommandDialog(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        CommandTab.entries.forEach { tab ->
+                        tabs.forEach { tab ->
                             FilterChip(
                                 selected = selectedTab == tab,
                                 onClick = { selectedTab = tab },
